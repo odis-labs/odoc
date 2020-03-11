@@ -87,6 +87,10 @@ let dst ?create () =
   Arg.(required & opt (some (convert_directory ?create ())) None &
        info ~docs ~docv:"DIR" ~doc ["o"; "output-dir"])
 
+let semantic_uris =
+  let doc = "Generate pretty (semantic) links" in
+  Arg.(value & flag (info ~doc ["semantic-uris";"pretty-uris"]))
+
 module Compile : sig
   val output_file : dst:string option -> input:Fs.file -> Fs.file
   val input : string Term.t
@@ -224,10 +228,6 @@ end = struct
       let doc = "Input file" in
       Arg.(required & pos 0 (some file) None & info ~doc ~docv:"file.odoc" [])
     in
-    let semantic_uris =
-      let doc = "Generate pretty (semantic) links" in
-      Arg.(value & flag (info ~doc ["semantic-uris";"pretty-uris"]))
-    in
     let closed_details =
       let doc = "If this flag is passed <details> tags (used for includes) will \
                  be closed by default."
@@ -302,6 +302,30 @@ end = struct
 
   let info =
     Term.info ~doc:"Generates an html fragment file from an mld one" "html-fragment"
+end
+
+module Odoc_json : sig
+  val cmd : unit Term.t
+  val info: Term.info
+end = struct
+
+  let json _semantic_uris directories output_dir input_file _warn_error =
+    (* Odoc_html.Tree.Relative_link.semantic_uris := semantic_uris; *)
+    let env = Env.create ~important_digests:false ~directories in
+    let file = Fs.File.of_string input_file in
+    Json_file.from_odoc ~env ~output:output_dir file
+  
+
+  let cmd =
+    let input =
+      let doc = "Input file" in
+      Arg.(required & pos 0 (some file) None & info ~doc ~docv:"file.odoc" [])
+    in
+    Term.(const handle_error $ (const json $ semantic_uris $
+      odoc_file_directories $ dst ~create:true () $ input $ warn_error))
+
+  let info =
+    Term.info ~doc:"Generates a json file from an odoc one" "json"
 end
 
 module Depends = struct
@@ -414,6 +438,7 @@ let () =
     [ Compile.(cmd, info)
     ; Odoc_html.(cmd, info)
     ; Html_fragment.(cmd, info)
+    ; Odoc_json.(cmd, info)
     ; Support_files_command.(cmd, info)
     ; Css.(cmd, info)
     ; Depends.Compile.(cmd, info)

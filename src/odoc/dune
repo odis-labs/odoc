@@ -6,6 +6,7 @@
   fpath
   odoc_compat
   odoc_html
+  odoc_json
   odoc_loader
   odoc_model
   odoc_xref
