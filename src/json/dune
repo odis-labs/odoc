@@ -13,5 +13,5 @@ let () =
  (name odoc_json)
  (public_name odoc.json)
     |} ^ preprocess ^ {|
- (libraries odoc_model))
+ (libraries odoc_model odoc_html tyxml))
     |}
