@@ -1,5 +1,6 @@
 
 module Lang = Odoc_model.Lang
+module Paths = Odoc_model.Paths
 
 module Local = struct
   let render_comment comment =
@@ -12,6 +13,24 @@ module Local = struct
     Format.flush_str_formatter ()
 end
 
+module Type_expression : sig
+  val type_expr : Lang.TypeExpr.t -> Json.t
+end = struct
+  let type_expr (texpr : Lang.TypeExpr.t) =
+    match texpr with
+    | Var s ->
+      Json.array (fun x -> x) [Json.string "var"; Json.string s]
+    | Any  -> Json.string "TODO: TypeExpression.Any"
+    | Alias _ ->
+      Json.string "TODO: TypeExpression.Alias"
+    | Arrow (None, _src, _dst) ->
+      Json.array (fun x -> x) [
+        Json.string "arrow";
+        Json.string "TODO: TypeExpression"
+      ]
+    | Arrow (Some _lbl, _src, _dst) -> Json.string "TODO: TypeExpression.Arrow"
+    | _ -> Json.string "TODO: TypeExpression"
+end
 
 module Module : sig
   val signature : Lang.Signature.t -> (Json.t * Tree.t list)
@@ -22,7 +41,12 @@ end = struct
     | TypeSubstitution _ ->  Json.string "TODO: TypeSubstitution"
     | TypExt _ ->  Json.string "TODO: TypExt"
     | Exception _ ->  Json.string "TODO: Exception"
-    | Value _ ->  Json.string "TODO: Value"
+    | Value x ->
+      Json.obj [
+        ("id", Json.string (Paths.Identifier.name x.id));
+        ("doc", Json.string (Local.render_comment x.doc));
+        ("type", Type_expression.type_expr x.type_);
+      ]
     | External _ ->  Json.string "TODO: External"
     | ModuleSubstitution _ ->  Json.string "TODO: ModuleSubstitution"
     | Module _ -> Json.string "TODO: Module"
@@ -46,7 +70,7 @@ let compilation_unit (unit : Lang.Compilation_unit.t) : Tree.t =
     | `Root (a, _) -> a.package
     | _ -> assert false
   in
-  let name = Odoc_model.Paths.Identifier.name unit.id in
+  let name = Paths.Identifier.name unit.id in
   (* The HTML tree is currently used for cross-references. *)
   Odoc_html.Tree.enter package;
   Odoc_html.Tree.enter name;
