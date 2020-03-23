@@ -3,33 +3,52 @@ module Lang = Odoc_model.Lang
 module Paths = Odoc_model.Paths
 
 module Local = struct
-  let render_comment comment =
-    let html = Odoc_html.Comment.to_html comment in
+  let render_html html =
     let ppf = Format.str_formatter in
     let pp_sep ppf () = Format.fprintf ppf "\n" in
     Format.fprintf ppf "%a"
       (Format.pp_print_list ~pp_sep (Tyxml.Html.pp_elt ()))
       html;
     Format.flush_str_formatter ()
+  
+  let render_comment comment =
+    let html = Odoc_html.Comment.to_html comment in
+    render_html html
 end
 
 module Type_expression : sig
   val type_expr : Lang.TypeExpr.t -> Json.t
 end = struct
-  let type_expr (texpr : Lang.TypeExpr.t) =
+  let rec type_expr (texpr : Lang.TypeExpr.t) =
     match texpr with
     | Var s ->
-      Json.array (fun x -> x) [Json.string "var"; Json.string s]
+      Json.array [Json.string "var"; Json.string s]
     | Any  -> Json.string "TODO: TypeExpression.Any"
     | Alias _ ->
       Json.string "TODO: TypeExpression.Alias"
-    | Arrow (None, _src, _dst) ->
-      Json.array (fun x -> x) [
-        Json.string "arrow";
-        Json.string "TODO: TypeExpression"
-      ]
+    | Arrow (None, src, dst) ->
+      Json.array
+        (Json.string "arrow" :: [type_expr src] @ [type_expr dst])
     | Arrow (Some _lbl, _src, _dst) -> Json.string "TODO: TypeExpression.Arrow"
-    | _ -> Json.string "TODO: TypeExpression"
+    | Tuple _xs -> Json.string "TODO: Tuple"
+    | Constr (path, params) ->
+      let link = Odoc_html.Tree.Relative_link.of_path ~stop_before:false (path :> Paths.Path.t) in
+      format_type_path params link
+    | Polymorphic_variant _pvar -> Json.string "TODO: Polyvariant"
+    | Object _ -> Json.string "TODO: Object"
+    | Class _ -> Json.string "TODO: Class"
+    | Poly _ -> Json.string "TODO: Poly"
+    | Package _ -> Json.string "TODO: Package"
+  
+  and format_type_path (params : Odoc_model.Lang.TypeExpr.t list) path =
+    match params with
+    | [] -> Json.string (Local.render_html path)
+    | [param] ->
+      let param = type_expr param in
+      Json.array [Json.string (Local.render_html path); param]
+    | params  ->
+      let params = List.map type_expr params in
+      Json.array params
 end
 
 module Module : sig
@@ -58,7 +77,7 @@ end = struct
     | Comment `Stop -> Json.string "TODO: Comment Stop"
 
   let signature (items : Lang.Signature.t) =
-    let content = Json.array signature_item items in
+    let content = Json.array (List.map signature_item items) in
     let children = [] in
     (content, children)
 end
@@ -86,17 +105,3 @@ let compilation_unit (unit : Lang.Compilation_unit.t) : Tree.t =
     ("content", content);
   ] in
   Tree.make ~name content children
-    (* let header_docs, html, subtree =
-      match unit.content with
-      | Module sign ->
-        let html, toc, subpages = signature ?theme_uri sign in
-        let header_docs =
-          match toc with
-          | [] -> header_docs
-          | _ -> header_docs @ (Top_level_markup.render_toc toc)
-        in
-        header_docs, html, subpages
-      | Pack packed ->
-        header_docs, pack packed, []
-    in
-    Tree.make ~header_docs ?theme_uri html subtree *)
