@@ -63,12 +63,24 @@ end = struct
     | Value x ->
       Json.obj [
         ("id", Json.string (Paths.Identifier.name x.id));
+        ("kind", Json.string "value");
         ("doc", Json.string (Local.render_comment x.doc));
         ("type", Json.string (Md.Type_expression.type_expr x.type_));
       ]
-    | External _ ->  Json.string "TODO: External"
+    | External x ->
+      Json.obj [
+        ("id", Json.string (Paths.Identifier.name x.id));
+        ("kind", Json.string "external");
+        ("doc", Json.string (Local.render_comment x.doc));
+        ("type", Json.string (Md.Type_expression.type_expr x.type_));
+      ]
     | ModuleSubstitution _ ->  Json.string "TODO: ModuleSubstitution"
-    | Module _ -> Json.string "TODO: Module"
+    | Module (_rec, x) ->
+      Json.obj [
+        ("id", Json.string (Paths.Identifier.name x.id));
+        ("kind", Json.string "module");
+        ("doc", Json.string (Local.render_comment x.doc));
+      ]
     | ModuleType _ -> Json.string "TODO: ModuleType"
     | Include _ -> Json.string "TODO: Include"
     | Class _ -> Json.string "TODO: Class"
