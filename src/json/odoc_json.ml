@@ -1,5 +1,5 @@
 
 module Targets = Targets
 module Tree = Tree
-module Generator = Md
+module Generator = Generator
 module Json = Json
