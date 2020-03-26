@@ -1,6 +1,6 @@
 type t = {
   name : string;
-  content : Json.t;
+  content : string;
   children : t list
 }
 

@@ -14,7 +14,7 @@ val bool : bool -> t
 
 val string : string -> t
 
-val array : ('a -> t) -> 'a list -> t
+val array : t list -> t
 
 val obj : (string * t) list -> t
 

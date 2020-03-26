@@ -16,8 +16,8 @@ let bool x = Bool x
 
 let string x = String x
 
-let array f xs =
-  Array (List.map f xs)
+let array xs =
+  Array xs
 
 let obj xs = Obj xs
 

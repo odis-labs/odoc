@@ -10,7 +10,7 @@ module Local = struct
       (Format.pp_print_list ~pp_sep (Tyxml.Html.pp_elt ()))
       html;
     Format.flush_str_formatter ()
-  
+
   let render_comment comment =
     let html = Odoc_html.Comment.to_html comment in
     render_html html
@@ -26,10 +26,8 @@ end = struct
     | Any  -> Json.string "TODO: TypeExpression.Any"
     | Alias _ ->
       Json.string "TODO: TypeExpression.Alias"
-    | Arrow (None, src, dst) ->
-      Json.array
-        (Json.string "arrow" :: [type_expr src] @ [type_expr dst])
-    | Arrow (Some _lbl, _src, _dst) -> Json.string "TODO: TypeExpression.Arrow"
+    | Arrow (None, _src, _dst)
+    | Arrow (Some _, _src, _dst) -> Json.string "TODO: TypeExpression.Arrow"
     | Tuple _xs -> Json.string "TODO: Tuple"
     | Constr (path, params) ->
       let link = Odoc_html.Tree.Relative_link.of_path ~stop_before:false (path :> Paths.Path.t) in
@@ -39,7 +37,7 @@ end = struct
     | Class _ -> Json.string "TODO: Class"
     | Poly _ -> Json.string "TODO: Poly"
     | Package _ -> Json.string "TODO: Package"
-  
+
   and format_type_path (params : Odoc_model.Lang.TypeExpr.t list) path =
     match params with
     | [] -> Json.string (Local.render_html path)
@@ -50,6 +48,7 @@ end = struct
       let params = List.map type_expr params in
       Json.array params
 end
+let () = ignore Type_expression.type_expr
 
 module Module : sig
   val signature : Lang.Signature.t -> (Json.t * Tree.t list)
@@ -64,7 +63,7 @@ end = struct
       Json.obj [
         ("id", Json.string (Paths.Identifier.name x.id));
         ("doc", Json.string (Local.render_comment x.doc));
-        ("type", Type_expression.type_expr x.type_);
+        ("type", Json.string (Md.Type_expression.type_expr x.type_));
       ]
     | External _ ->  Json.string "TODO: External"
     | ModuleSubstitution _ ->  Json.string "TODO: ModuleSubstitution"
@@ -104,4 +103,6 @@ let compilation_unit (unit : Lang.Compilation_unit.t) : Tree.t =
     ("doc", Json.string doc);
     ("content", content);
   ] in
-  Tree.make ~name content children
+  (* Tree.make ~name content children *)
+  ignore(name, content, children);
+  assert false

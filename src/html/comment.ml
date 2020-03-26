@@ -186,7 +186,7 @@ let leaf_inline_element
     : Comment.leaf_inline_element -> ([> non_link_phrasing ] Html.elt) option =
   function
   | `Space -> Some (Html.txt " ")
-  | `Word s -> Some (Html.txt s)
+  | `Word s -> Some (Html.txt (String.escaped s))
   | `Code_span s -> Some (Html.code [Html.txt s])
   | `Raw_markup (`Html, s) -> Some (Html.Unsafe.data s)
 
@@ -251,7 +251,7 @@ let rec nestable_block_element
     to_syntax:Tree.syntax -> from_syntax:Tree.syntax ->
     Comment.nestable_block_element -> ([> flow ] as 'a) Html.elt =
   fun ?xref_base_uri ~to_syntax ~from_syntax -> function
-  | `Paragraph [{value = `Raw_markup (`Html, s); _}] -> Html.Unsafe.data s
+  | `Paragraph [{value = `Raw_markup (`Html, s); _}] -> Html.Unsafe.data (String.escaped s)
   | `Paragraph content -> Html.p (inline_element_list ?xref_base_uri content)
   | `Code_block s ->
     let open Tree in
@@ -277,7 +277,7 @@ let rec nestable_block_element
     let code = s in
     let classname = string_of_syntax from_syntax in
     Html.pre [Html.code ~a:[Html.a_class [classname]] [Html.txt code]]
-  | `Verbatim s -> Html.pre [Html.txt s]
+  | `Verbatim s -> Html.pre [Html.txt (String.escaped s)]
   | `Modules ms ->
     let items = List.map (Reference.to_html ?xref_base_uri ~stop_before:false) (ms :> Odoc_model.Paths.Reference.t list)  in
     let items = (items :> (Html_types.li_content Html.elt) list) in
