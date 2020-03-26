@@ -48,7 +48,8 @@ end = struct
       let params = List.map type_expr params in
       Json.array params
 end
-let () = ignore Type_expression.type_expr
+
+let _foo x = Type_expression.type_expr x
 
 module Module : sig
   val signature : Lang.Signature.t -> (Json.t * Tree.t list)
