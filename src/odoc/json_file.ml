@@ -36,7 +36,7 @@ Root.read input >>= fun root ->
         open_out (Fs.File.to_string file)
       in
       let fmt = Format.formatter_of_out_channel oc in
-      Format.fprintf fmt "%s@.@?" content;
+      Format.fprintf fmt "%a@.@?" Odoc_json.Json.pp content;
       close_out oc
     );
     Ok ()

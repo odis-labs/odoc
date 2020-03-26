@@ -103,6 +103,4 @@ let compilation_unit (unit : Lang.Compilation_unit.t) : Tree.t =
     ("doc", Json.string doc);
     ("content", content);
   ] in
-  (* Tree.make ~name content children *)
-  ignore(name, content, children);
-  assert false
+  Tree.make ~name content children

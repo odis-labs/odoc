@@ -125,5 +125,7 @@ let compilation_unit (unit : Lang.Compilation_unit.t) : Tree.t =
     | Pack _packed -> failwith "TODO: Pack"
   in
   let content =  str "# %s\n\n%s\n\n%s" name doc content in
-  Tree.make ~name content children
+  (* Tree.make ~name content children *)
+  ignore (content, children);
+  assert false
   
