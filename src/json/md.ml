@@ -26,7 +26,7 @@ module Type_expression : sig
 end = struct
   let rec type_expr (texpr : Lang.TypeExpr.t) =
     match texpr with
-    | Var s -> "'" ^ s
+    | Var var -> "'" ^ var
     | Any  -> "<TypeExpression.Any>"
     | Alias _ -> "<TypeExpression.Alias>"
     | Arrow (lbl_opt, src, dst) ->
@@ -52,22 +52,26 @@ end = struct
         | _ -> assert false
       end
     | Tuple _xs -> "<Tuple>"
-    | Constr (path, params) ->
-      let link = Odoc_html.Tree.Relative_link.of_path ~stop_before:false (path :> Paths.Path.t) in
-      format_type_path params link
+
+    (* Ex re: int, Stdlib.list(int), Result.t('a, int) *)
+    | Constr ((type_path : Odoc_model.Paths.Path.Type.t), params) ->
+      let path = Odoc_html.Url.render_path (type_path :> Paths.Path.t) in
+      (* let link = Odoc_html.Tree.Relative_link.of_path ~stop_before:false (path :> Paths.Path.t) in *)
+      format_type_path params path
     | Polymorphic_variant _pvar -> "<Polyvariant>"
     | Object _ -> "<Object>"
     | Class _ -> "<Class>"
     | Poly _ -> "<Poly>"
     | Package _ -> "<Package>"
 
+
   and format_type_path (params : Odoc_model.Lang.TypeExpr.t list) path =
     match params with
-    | [] -> Local.render_html path
+    | [] -> path
     | params ->
       let params = List.map type_expr params in
       let params = String.concat ", " params in
-      Local.render_html path ^ "(" ^ params ^ ")"
+      path ^ "(" ^ params ^ ")"
 end
 
 
@@ -128,4 +132,4 @@ let compilation_unit (unit : Lang.Compilation_unit.t) : Tree.t =
   (* Tree.make ~name content children *)
   ignore (content, children);
   assert false
-  
+
